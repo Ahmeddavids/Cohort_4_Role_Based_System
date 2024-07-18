@@ -344,3 +344,35 @@ exports.changePassword = async (req, res) => {
     }
 };
 
+exports.logOut = async (req, res) => {
+    try {
+        const auth = req.headers.authorization;
+        const token = auth.split(' ')[1];
+
+        if(!token){
+            return res.status(401).json({
+                message: 'invalid token'
+            })
+        }
+        // Verify the user's token and extract the user's email from the token
+        const { email } = jwt.verify(token, process.env.JWT_SECRET);
+        // Find the user by ID
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+        user.blackList.push(token);
+        // Save the changes to the database
+        await user.save();
+        //   Send a success response
+        res.status(200).json({
+            message: "User logged out successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+}

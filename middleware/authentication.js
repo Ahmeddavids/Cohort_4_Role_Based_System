@@ -27,21 +27,26 @@ exports.authenticate = async (req, res, next) => {
                 message: 'Authentication failed:  User not found'
             })
         }
-        console.log(user)
-
         // Check if the user is an admin
-        if(!user.isAdmin){
-            return res.status(403).json({
-                message: 'Authentication failed:  User not an admin'
+        if(user.blackList.includes(token)){
+            return res.status(401).json({
+                message: 'Session expired: Please login to continue'
             })
         }
+
+        // // Check if the user is an admin
+        // if(!user.isAdmin){
+        //     return res.status(403).json({
+        //         message: 'Authentication failed:  User not an admin'
+        //     })
+        // }
 
         req.user = decodedToken
         next();
 
     } catch (error) {
         if(error instanceof jwt.JsonWebTokenError){
-            return res.json({message: 'Error verifying user'})
+            return res.json({message: 'Session expired: Please login to continue'})
         }
         res.status(500).json({
             message: error.message
